@@ -25,9 +25,7 @@ client.on('connect', async connection => {
     connection.on('message', messageReceivedHandle);
 
     //Get the user's name
-    const {
-        username
-    } = await inquirer.askForName();
+    const {username} = await inquirer.askForName();
 
     //Let the server know that we are connected.
     if (connection.connected)
