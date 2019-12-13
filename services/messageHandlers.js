@@ -1,20 +1,8 @@
 const inquirer = require("./inquirer");
 const chalk = require("chalk");
 
-const commands = require("./commands");
+const commandResponses = require("./commandResponses");
 const consts = require("../shared/consts");
-
-const askForNextCommand = async () => {
-	try {
-		const { command } = await inquirer.askNext();
-		const [commandName, ...commandDataSplitted] = command.split(" ");
-		const commandData = { name: commandName, data: commandDataSplitted };
-		const payload = { type: "command", commandData };
-		return payload;
-	} catch (error) {
-		console.error(error);
-	}
-};
 
 const askClientForPassword = async () => {
 	try {
@@ -85,8 +73,7 @@ module.exports = {
 	//New folder password reserved succesfully.
 	passwordReserved: () => {
 		startWorkingLog(consts.PASSWORD_RESERVED);
-		const payload = askForNextCommand();
-		if (payload) return payload;
+		return inquirer.askForNextCommand();
 	},
 
 	//Response after validation check.
@@ -94,27 +81,26 @@ module.exports = {
 		try {
 			if (isValidate) {
 				startWorkingLog(consts.VALIDATE_SUCCESFULLY);
-				const payload = askForNextCommand();
-				if (payload) return payload;
+				return inquirer.askForNextCommand();
 			} else {
 				const { confirmed } = await inquirer.askForPasswordAgain();
-				if (confirmed) {
-					const payload = askClientForPassword();
-					if (payload) return payload;
-				} else {
-					const payload = askForMainClientFolder(consts.SELECT_ANOTHER_FOLDER);
-					if (payload) return payload;
-				}
+				if (confirmed) return askClientForPassword();
+				else return askForMainClientFolder(consts.SELECT_ANOTHER_FOLDER);
 			}
 		} catch (error) {
 			console.error(error);
 		}
 	},
 
-	//Routes command responces to their appropriate function handlers.
-	commandResponse: ({ name, ...restResponseData }) => {
-		//For continues commands, the response should contain the 'type' property.
-		const response = commands[name](restResponseData);
-		if (response) return response;
+	// Routes command responces to their appropriate function handlers. 
+	// In case of an error, log and ask for next command.
+	// @param commandName {string} -> appropriate to commandResponces methods.
+	// @param errorMessage {string}.
+	// @param restResponseData {object}.
+	commandResponse: ({ commandName, errorMessage, ...restResponseData }) => {
+		if (errorMessage) {
+			console.log(chalk`{red ${errorMessage}}`);
+			return inquirer.askForNextCommand();
+		} else return commandResponses[commandName](restResponseData);
 	}
 };

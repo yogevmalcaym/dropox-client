@@ -1,4 +1,5 @@
 const inquirer = require("inquirer");
+const consts = require("../shared/consts");
 
 // A simple validation that the input is not empty.
 // @param failMessage {string}.
@@ -7,8 +8,28 @@ const notEmptyValidation = ({ value, failMessage }) => {
 	else return failMessage;
 };
 
+//Asks for the next commant from the client.
+const askNext = () => {
+	const questions = [
+		{
+			name: "command",
+			type: "input",
+			mask: true,
+			message: ":",
+			validate: value =>
+				notEmptyValidation({
+					value,
+					failMessage: consts.FOLDER_NAME_NOT_VALID
+				})
+		}
+	];
+	return inquirer.prompt(questions);
+};
+
+// Module that holds the questions.
+// The methods returns promises.
 module.exports = {
-	askMainFolder: (questionsMessage) => {
+	askMainFolder: questionsMessage => {
 		const questions = [
 			{
 				name: "mainFolderName",
@@ -17,7 +38,7 @@ module.exports = {
 				validate: value =>
 					notEmptyValidation({
 						value,
-						failMessage: "Folder name cannot be empty"
+						failMessage: consts.FOLDER_NAME_NOT_EMPTY
 					})
 			}
 		];
@@ -28,7 +49,7 @@ module.exports = {
 			{
 				name: "isClientOwn",
 				type: "confirm",
-				message: "This folder is already exists, you own it?"
+				message: consts.FOLDER_NAME_EXISTS
 			}
 		];
 		return inquirer.prompt(questions);
@@ -43,25 +64,7 @@ module.exports = {
 				validate: value =>
 					notEmptyValidation({
 						value,
-						failMessage: "password cannot be empty"
-					})
-			}
-		];
-		return inquirer.prompt(questions);
-	},
-	//Asks for the next commant from the client.
-	askNext: () => {
-		const questions = [
-			{
-				name: "command",
-				type: "input",
-				mask: true,
-				message: ":",
-				validate: value =>
-					notEmptyValidation({
-						value,
-						failMessage:
-							"Please type a valid command, for more information type `help`"
+						failMessage: consts.PASSWORD_NOT_EMPTY
 					})
 			}
 		];
@@ -73,9 +76,20 @@ module.exports = {
 				name: "confirmed",
 				type: "confirm",
 				message:
-					"This is not the appropriate password for this folder. whould you like to try again?"
+					consts.WRONG_PASSWORD
 			}
 		];
 		return inquirer.prompt(questions);
+	},
+	askForNextCommand: async () => {
+		try {
+			const { command } = await askNext();
+			const [commandName, ...commandDataSplitted] = command.split(" ");
+			const commandData = { commandName, data: commandDataSplitted };
+			const payload = { type: "command", commandData };
+			return payload;
+		} catch (error) {
+			console.error(error);
+		}
 	}
 };

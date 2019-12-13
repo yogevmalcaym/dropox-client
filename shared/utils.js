@@ -1,4 +1,4 @@
-//Holds general utility methods
+// Holds general utility methods.
 module.exports = {
 	stringToJSON: string => JSON.parse(string),
 	JSONToString: json => JSON.stringify(json)
