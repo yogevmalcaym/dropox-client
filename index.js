@@ -1,61 +1,67 @@
 #!/usr/bin/env node
 
-const WebSocketClient = require("websocket").client;
-const client = new WebSocketClient();
+// const WebSocketClient = require("websocket").client;
+// const client = new WebSocketClient();
+const net = require("net");
+
+// TODO instead of hardcoded, I should use the procces.env[2] which typed by the client in the init run command.
+const PORT = 8080;
+const HOST = "localhost";
+
+const socket = net.connect({ port: PORT, host: HOST });
 
 const inquirer = require("./services/inquirer");
 const utils = require("./shared/utils");
 const messageHandlers = require("./services/messageHandlers");
 
-//Websocket events handlers
-const errorHandle = error => {
-	console.log("Connection Error: " + error.toString());
-};
-const connectionClosedHandle = () => {
-	console.log("Connection Closed");
-};
-
-// Routing the message to the appropriate function handler by the `type` property.
-// Sends back to the server a response if has.
-// @param message {object} -> should contain `utf8Data` property.
-const messageReceivedHandle = async ({ message, connection }) => {
+//Initialize process when the connection is ready to use.
+const init = async () => {
 	try {
-		const { type, ...restArgs } = utils.stringToJSON(message.utf8Data);
-		const response = await messageHandlers[type](restArgs);
-		if (response) connection.sendUTF(utils.JSONToString(response));
+		//Ask the client for wanted main folder.
+		const { mainFolderName } = await inquirer.askMainFolder();
+		const payload = {
+			type: "mainClientFolder",
+			folderName: mainFolderName
+		};
+		const payloadStringified = utils.JSONToString(payload);
+		socket.write(payloadStringified);
 	} catch (error) {
 		console.error(error);
 	}
-	console.log("message received: " + message.utf8Data);
 };
 
-client.on("connectFailed", errorHandle);
+const connectionClosedHandle = error => {
+	console.log("Connection Closed");
+	if (error) {
+		console.log("Error: " + error.toString());
+	}
+};
+const connectionErrorHandle = error => {
+	console.log("Error: " + error.toString());
+};
+// Routing the data to the appropriate function handler by the `type` property.
+// Sends back to the server a response if has.
+// @param data {string} -> utf8 encoded.
+const dataReceivedHandle = async data => {
+	console.log("data received: " + data);
+	try {
+		const { type, ...restArgs } = utils.stringToJSON(data);
+		const response = await messageHandlers[type](restArgs);
+		if (response) socket.write(utils.JSONToString(response));
+	} catch (error) {
+		console.error(error);
+	}
+};
 
-client.on("connect", connection => {
-	connection.on("error", errorHandle);
-	connection.on("close", connectionClosedHandle);
-	connection.on("message", message =>
-		messageReceivedHandle({ message, connection })
-	);
-
-	//Start procces after connected
-	(async () => {
-		try {
-			//Get the folder name asked by the client
-			const { mainFolderName } = await inquirer.askMainFolder();
-
-			if (connection.connected) {
-				const payload = {
-					type: "mainClientFolder",
-					folderName: mainFolderName
-				};
-				const payloadStringified = utils.JSONToString(payload);
-				connection.sendUTF(payloadStringified);
-			}
-		} catch (error) {
-			console.error(error);
-		}
-	})();
+socket.on("connect", () => {
+	console.log("Connected succesfully, connection: " + socket);
+	socket.setEncoding("utf8");
 });
 
-client.connect("ws://localhost:8080/", "echo-protocol");
+socket.on("error", connectionErrorHandle);
+socket.on("close", connectionClosedHandle);
+socket.on("data", dataReceivedHandle);
+socket.on("drain", () => {
+	console.log("Buffer is empty");
+});
+socket.on("ready", init);

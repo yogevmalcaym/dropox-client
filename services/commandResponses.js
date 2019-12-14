@@ -1,6 +1,7 @@
 const inquirer = require("./inquirer");
 const chalk = require("chalk");
 const consts = require("../shared/consts");
+
 // Module that handles responses of commands that arrives from the server.
 // The method returns promise for next command.
 module.exports = {
