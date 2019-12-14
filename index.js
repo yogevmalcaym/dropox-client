@@ -31,6 +31,7 @@ const init = async () => {
 };
 
 const connectionClosedHandle = error => {
+	socket.end();
 	console.log("Connection Closed");
 	if (error) {
 		console.log("Error: " + error.toString());
@@ -46,6 +47,8 @@ const dataReceivedHandle = async data => {
 	console.log("data received: " + data);
 	try {
 		const { type, ...restArgs } = utils.stringToJSON(data);
+		// TODO Change it to be not like this
+		if (restArgs.commandName === "download") restArgs.socket = socket;
 		const response = await messageHandlers[type](restArgs);
 		if (response) socket.write(utils.JSONToString(response));
 	} catch (error) {
