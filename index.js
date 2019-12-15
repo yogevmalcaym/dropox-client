@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 
+const path = require('path');
+ require("dotenv").config({path: path.resolve(process.cwd(), 'client/.env')});
+
 // const WebSocketClient = require("websocket").client;
 // const client = new WebSocketClient();
 const net = require("net");
-
-// TODO instead of hardcoded, I should use the procces.env[2] which typed by the client in the init run command.
-const PORT = 8080;
-const HOST = "localhost";
-
-const socket = net.connect({ port: PORT, host: HOST });
+console.log(process.env.REMOTE_PORT)
+const socket = net.connect({ port: process.env.REMOTE_PORT, host: process.env.REMOTE_HOST });
 
 const inquirer = require("./services/inquirer");
 const utils = require("./shared/utils");

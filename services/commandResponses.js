@@ -3,7 +3,6 @@ const chalk = require("chalk");
 const consts = require("../shared/consts");
 const writeStream = require("./writeStream");
 const utils = require("../shared/utils");
-const config = require("../config.json");
 
 // Module that handles responses of commands that arrives from the server.
 // The method returns promise for next command.
@@ -43,7 +42,7 @@ module.exports = {
 		// Gets the path to save the file
 		const localSavePath = utils.joinPath(
 			process.cwd(),
-			config.localSaveFolderPath
+			process.env.SAVE_FOLDER_NAME
 		);
 		//TODO make it done by the writeable stream instead by the writable
 		// When the server done reading the file it sends payload with `done` set to true.
