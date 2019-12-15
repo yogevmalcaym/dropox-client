@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 
-const path = require('path');
- require("dotenv").config({path: path.resolve(process.cwd(), '.env')});
+const path = require("path");
+require("dotenv").config({ path: path.resolve(process.cwd(), ".env") });
 
 // const WebSocketClient = require("websocket").client;
 // const client = new WebSocketClient();
 const net = require("net");
-console.log(process.env.REMOTE_PORT)
-const socket = net.connect({ port: process.env.REMOTE_PORT, host: process.env.REMOTE_HOST });
+const socket = net.connect({
+	port: process.env.REMOTE_PORT,
+	host: process.env.REMOTE_HOST
+});
 
 const inquirer = require("./services/inquirer");
 const utils = require("./shared/utils");
@@ -39,6 +41,7 @@ const connectionClosedHandle = error => {
 const connectionErrorHandle = error => {
 	console.log("Error: " + error.toString());
 };
+
 // Routing the data to the appropriate function handler by the `type` property.
 // Sends back to the server a response if has.
 // @param data {string} -> utf8 encoded.

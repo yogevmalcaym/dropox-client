@@ -8,24 +8,34 @@ const utils = require("../shared/utils");
 // The method returns promise for next command.
 module.exports = {
 	// Handles server's response of `dir` command.
-	// @param data {object: folderData {array}, folderPath {string}}.
-	dir: ({ data: { folderData, folderPath } }) => {
+	// @param data {object: folderData {array}, folderPath {string}, extra {boolean}}.
+	dir: ({ data: { folderData, folderPath, extra } }) => {
 		let commandMessage;
 		const tab = `\t`;
 		const depthStageIndent = `${tab}${tab}`;
 		const enter = `\n`;
 		const noneFileType = " - ";
-		const startComment = `Folder: ${folderPath}${enter}Content:`;
+		const baseDataFlow = `name, file type, file\\dir`;
+		const extraDataFlow = `${baseDataFlow}, size(bytes), downloads count, creation time `;
+		const dataFlow = extra ? extraDataFlow : baseDataFlow;
+		const startComment = `Folder: ${folderPath}${enter}${dataFlow}${enter}Content:`;
 		// In case of empty folder.
 		if (folderData.length === 0)
 			commandMessage = chalk`${startComment}${enter}{red ${consts.FOLDER_IS_EMPTY}}`;
 		// Structures the command's result data by `folderData` array.
 		else
-			commandMessage = folderData.reduce((acc, { type, name, fileType }) => {
-				acc += `${enter}${depthStageIndent}${name}${tab}${fileType ||
-					noneFileType}${tab}${type}`;
-				return acc;
-			}, startComment);
+			commandMessage = folderData.reduce(
+				(acc, { type, name, fileType, size, downloadsCount, ctime }) => {
+					acc += `${enter}${depthStageIndent}${name}${tab}${fileType ||
+						noneFileType}${tab}${type}${
+						extra && fileType
+							? `${tab}${size}${tab}${downloadsCount}${tab}${ctime}`
+							: ""
+					}`;
+					return acc;
+				},
+				startComment
+			);
 
 		console.log(commandMessage);
 		return inquirer.askForNextCommand();
@@ -65,5 +75,11 @@ module.exports = {
 		wstream.on("error", error => {
 			console.error(error);
 		});
+	},
+	// Handles the response for help command. 
+	// @param data {string}
+	help: ({ data }) => {
+		console.log(data);
+		return inquirer.askForNextCommand();
 	}
 };
