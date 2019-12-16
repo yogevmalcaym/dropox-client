@@ -2,7 +2,7 @@
 
 const path = require("path");
 // config .env file variables to be accessible through 'procces.env'.
-require("dotenv").config({ path: path.resolve(process.cwd(), ".env") });
+require("dotenv").config();
 
 const net = require("net");
 // Connect to server.
