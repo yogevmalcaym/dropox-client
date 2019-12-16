@@ -1,7 +1,7 @@
 const inquirer = require("./inquirer");
 const chalk = require("chalk");
 const consts = require("../shared/consts");
-const writeStream = require("./writeStream");
+const files = require("./files");
 const utils = require("../shared/utils");
 
 // Module that handles responses of commands that arrives from the server.
@@ -48,35 +48,56 @@ module.exports = {
 	// Handles download operation responses.
 	// @param done {boolean}
 	// @param socket {net.Socket instance}
-	download: ({ data: { done } = {}, socket }) => {
-		// Gets the path to save the file
-		const localSavePath = utils.joinPath(
-			process.cwd(),
-			process.env.SAVE_FOLDER_NAME
-		);
-		//TODO make it done by the writeable stream instead by the writable
-		// When the server done reading the file it sends payload with `done` set to true.
-		if (done) {
-			console.log(
-				chalk`{green Download done successfully, saved to ${localSavePath}}`
+	download: ({ data: fileName, socket }) => {
+		return new Promise((resolve, reject) => {
+			// Make sure that the saving folder is exists and create writestream to the required file.
+			const localSaveFolderPath = utils.joinPath(
+				process.cwd(),
+				process.env.SAVE_FOLDER_NAME
 			);
-			return inquirer.askForNextCommand();
-		}
-		//TODO make sure that this stream is closed or at least not causes a memory leak
-		const wstream = writeStream(localSavePath);
-		socket.pipe(wstream);
-		// wstream.close();
-		// wstream.on("end", () => {
-		// 	console.log("end");
-		// });
-		// wstream.on("close", () => {
-		// 	console.log("Stream closed");
-		// });
-		wstream.on("error", error => {
-			console.error(error);
+			if (!files.isExists(localSaveFolderPath))
+				files.createFolder(localSaveFolderPath);
+			const localSaveFilePath = utils.joinPath(localSaveFolderPath, fileName);
+			const wstream = files.getWriteStream(localSaveFilePath);
+
+			socket.streaming = true;
+			console.log("start saving to " + localSaveFilePath);
+			// socket.pipe(wstream);
+			// Handles the file data that arrives.
+			// @param chunk {string}. (TODO should be Buffer)
+			socket.on("data", chunk => {
+				console.log("chunk arraived: " + chunk);
+				if (chunk === "done") {
+					wstream.close();
+					console.log(
+						chalk`{green Download done successfully, saved to ${localSavePath}}`
+					);
+					socket.streaming = false;
+					resolve(inquirer.askForNextCommand());
+				} else {
+					wstream.write(chunk);
+				}
+			});
+			// In case of error at the writestream, ask for command form client to continue at the process.
+			wstream.on("error", error => {
+				console.error(error);
+				reject(inquirer.askForNextCommand());
+			});
+			wstream.on("end", () => {
+				console.log("stream end");
+			});
+
+			wstream.on("finish", () => {
+				socket.streaming = false;
+				socket.unpipe(wstream);
+				console.log("write stream finished");
+			});
+			wstream.on("close", () => {
+				console.log("Write steam cloased");
+			});
 		});
 	},
-	// Handles the response for help command. 
+	// Handles the response for help command.
 	// @param data {string}
 	help: ({ data }) => {
 		console.log(data);

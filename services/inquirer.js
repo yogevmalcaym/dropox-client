@@ -75,17 +75,17 @@ module.exports = {
 			{
 				name: "confirmed",
 				type: "confirm",
-				message:
-					consts.WRONG_PASSWORD
+				message: consts.WRONG_PASSWORD
 			}
 		];
 		return inquirer.prompt(questions);
 	},
+	// Ask for the next command. returns payload typed 'command'.
 	askForNextCommand: async () => {
 		try {
 			const { command } = await askNext();
-			const [commandName, ...commandDataSplitted] = command.split(" ");
-			const commandData = { commandName, data: commandDataSplitted };
+			const [name, data] = command.split(" ");
+			const commandData = { name, data };
 			const payload = { type: "command", commandData };
 			return payload;
 		} catch (error) {

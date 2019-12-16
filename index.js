@@ -11,9 +11,11 @@ const socket = net.connect({
 	host: process.env.REMOTE_HOST
 });
 
+const chalk = require("chalk");
 const inquirer = require("./services/inquirer");
 const utils = require("./shared/utils");
 const messageHandlers = require("./services/messageHandlers");
+const commands = require("./services/commands");
 
 //Initialize process when the connection is ready to use.
 const init = async () => {
@@ -42,17 +44,38 @@ const connectionErrorHandle = error => {
 	console.log("Error: " + error.toString());
 };
 
+socket.on("pipe", src => {
+	console.log("someone is piping!");
+});
+
 // Routing the data to the appropriate function handler by the `type` property.
-// Sends back to the server a response if has.
-// @param data {string} -> utf8 encoded.
+// Sends back to the server a payload if has.
+// @param data {string}.
 const dataReceivedHandle = async data => {
 	console.log("data received: " + data);
+	if (socket.streaming) return;
 	try {
-		const { type, ...restArgs } = utils.stringToJSON(data);
-		// TODO Change it to be not like this
-		if (restArgs.commandName === "download") restArgs.socket = socket;
-		const response = await messageHandlers[type](restArgs);
-		if (response) socket.write(utils.JSONToString(response));
+		let payload;
+		const { type, errorMessage, ...restProps } = utils.stringToJSON(data);
+		// In case of an error, log it and ask for next command.
+		if (errorMessage) {
+			console.log(chalk`{red ${errorMessage}}`);
+			payload = await inquirer.askForNextCommand();
+		} else {
+			if (type === "command") {
+				// Routes commands to their appropriate function handlers.
+				const { name, ...restArrivedData } = restProps;
+				// TODO Change it to be not like this
+				if (name === "download") restArrivedData.socket = socket;
+				payload = await commands[name](restArrivedData);
+			}
+			//If a type property arrived, pass it to the appropriate handler.
+			else if (type) {
+				payload = await messageHandlers[type](restProps);
+			}
+		}
+		console.log(payload);
+		if (payload) socket.write(utils.JSONToString(payload));
 	} catch (error) {
 		console.error(error);
 	}
@@ -60,11 +83,16 @@ const dataReceivedHandle = async data => {
 
 socket.on("connect", () => {
 	console.log("Connected succesfully, connection: " + socket);
-	socket.setEncoding("utf8");
 });
 
 socket.on("error", connectionErrorHandle);
 socket.on("close", connectionClosedHandle);
+socket.on("end", () => {
+	console.log("Socket end");
+});
+socket.on("finish", () => {
+	console.log("socket finish");
+});
 socket.on("data", dataReceivedHandle);
 socket.on("drain", () => {
 	console.log("Buffer is empty");
