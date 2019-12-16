@@ -11,7 +11,6 @@ module.exports = {
 	FOLDER_NAME_EXISTS: "This folder is already exists, you own it?",
 	PASSWORD_NOT_EMPTY: "password cannot be empty",
 	WRONG_PASSWORD:
-        "This is not the appropriate password for this folder. whould you like to try again?",
-        FOLDER_IS_EMPTY: 'This folder is empty'
-        
+		"This is not the appropriate password for this folder. whould you like to try again?",
+	FOLDER_IS_EMPTY: "This folder is empty"
 };

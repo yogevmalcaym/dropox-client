@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 const path = require("path");
+// config .env file variables to be accessible through 'procces.env'.
 require("dotenv").config({ path: path.resolve(process.cwd(), ".env") });
 
-// const WebSocketClient = require("websocket").client;
-// const client = new WebSocketClient();
 const net = require("net");
+// Connect to server.
 const socket = net.connect({
 	port: process.env.REMOTE_PORT,
 	host: process.env.REMOTE_HOST
@@ -33,35 +33,22 @@ const init = async () => {
 	}
 };
 
-const connectionClosedHandle = error => {
-	socket.end();
-	console.log("Connection Closed");
-	if (error) {
-		console.log("Error: " + error.toString());
-	}
-};
-const connectionErrorHandle = error => {
-	console.log("Error: " + error.toString());
-};
-
-socket.on("pipe", src => {
-	console.log("someone is piping!");
-});
-
 // Routing the data to the appropriate function handler by the `type` property.
 // Sends back to the server a payload if has.
 // @param data {string}.
 const dataReceivedHandle = async data => {
 	console.log("data received: " + data);
+	//TODO dont forget it when fixing download operation
 	if (socket.streaming) return;
 	try {
 		let payload;
 		const { type, errorMessage, ...restProps } = utils.stringToJSON(data);
-		// In case of an error, log it and ask for next command.
+		// In case of an error received, log it and ask for next command.
 		if (errorMessage) {
 			console.log(chalk`{red ${errorMessage}}`);
 			payload = await inquirer.askForNextCommand();
 		} else {
+			// payloads which typed 'command' should activate thier appropriate function in 'commands' module.
 			if (type === "command") {
 				// Routes commands to their appropriate function handlers.
 				const { name, ...restArrivedData } = restProps;
@@ -69,32 +56,23 @@ const dataReceivedHandle = async data => {
 				if (name === "download") restArrivedData.socket = socket;
 				payload = await commands[name](restArrivedData);
 			}
-			//If a type property arrived, pass it to the appropriate handler.
+			//If a type property arrived, pass it to the appropriate message handler.
 			else if (type) {
 				payload = await messageHandlers[type](restProps);
 			}
 		}
-		console.log(payload);
+		// writes to the socket connection in case there is a payload.
 		if (payload) socket.write(utils.JSONToString(payload));
 	} catch (error) {
 		console.error(error);
 	}
 };
+const connectionClosedHandle = () => console.log("Connection Closed");
+const connectionErrorHandle = error =>
+console.log("Error: " + error.toString());
 
-socket.on("connect", () => {
-	console.log("Connected succesfully, connection: " + socket);
-});
-
+// socket connection event listeners.
 socket.on("error", connectionErrorHandle);
 socket.on("close", connectionClosedHandle);
-socket.on("end", () => {
-	console.log("Socket end");
-});
-socket.on("finish", () => {
-	console.log("socket finish");
-});
 socket.on("data", dataReceivedHandle);
-socket.on("drain", () => {
-	console.log("Buffer is empty");
-});
 socket.on("ready", init);

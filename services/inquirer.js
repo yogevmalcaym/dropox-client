@@ -8,7 +8,7 @@ const notEmptyValidation = ({ value, failMessage }) => {
 	else return failMessage;
 };
 
-//Asks for the next commant from the client.
+//Asks next command from the client.
 const askNext = () => {
 	const questions = [
 		{
@@ -44,6 +44,7 @@ module.exports = {
 		];
 		return inquirer.prompt(questions);
 	},
+	// Ask if the client own the requested folder.
 	askIfOwn: () => {
 		const questions = [
 			{
@@ -70,6 +71,7 @@ module.exports = {
 		];
 		return inquirer.prompt(questions);
 	},
+	// After client typed wrong password, ask if he want to try again.
 	askIfPasswordAgain: () => {
 		const questions = [
 			{
