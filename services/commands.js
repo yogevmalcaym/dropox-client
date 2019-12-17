@@ -45,7 +45,7 @@ export const dir = ({ data: { folderData, folderPath, extra } }) => {
 
 // Handles server's response of `cd` command.
 export const cd = () => {
-	console.log(chalk`{bold.green OK}`);
+	console.log(consts.OK);
 	return inquirer.askForNextCommand();
 };
 

@@ -14,18 +14,17 @@ import * as inquirer from "./services/inquirer.js";
 import * as utils from "./shared/utils.js";
 import * as acquaintance from "./services/acquaintance.js";
 import * as commands from "./services/commands.js";
+import * as consts from "./shared/consts.js";
 
 //Initialize process when the connection is ready to use.
 const init = async () => {
 	try {
-		//Ask the client for wanted main folder.
-		const { mainFolderName } = await inquirer.askMainFolder();
-		const payload = {
-			type: "mainClientFolder",
-			folderName: mainFolderName
-		};
-		const payloadStringified = utils.JSONToString(payload);
-		socket.write(payloadStringified);
+		const response = await acquaintance.getMainFolderName(
+			consts.WELCOME_MESSAGE
+		);
+		const payload = { ...response, type: "acquaintance" };
+
+		socket.write(utils.JSONToString(payload));
 	} catch (error) {
 		console.error(error);
 	}
@@ -40,7 +39,8 @@ const dataReceivedHandle = async data => {
 	if (socket.streaming) return;
 	try {
 		let payload;
-		const { type, errorMessage, ...restProps } = utils.stringToJSON(data);
+		const { type, name, errorMessage, ...restProps } = utils.stringToJSON(data);
+		console.log(restProps);
 		// In case of an error received, log it and ask for next command.
 		if (errorMessage) {
 			console.log(chalk`{red ${errorMessage}}`);
@@ -49,17 +49,19 @@ const dataReceivedHandle = async data => {
 			// payloads which typed 'command' should activate thier appropriate function in 'commands' module.
 			if (type === "command") {
 				// Routes commands to their appropriate function handlers.
-				const { name, ...restArrivedData } = restProps;
+				const { ...restArrivedData } = restProps;
 				// TODO Change it to be not like this
 				if (name === "download") restArrivedData.socket = socket;
 				payload = await commands[name](restArrivedData);
 			}
-			//If a type property arrived, pass it to the appropriate message handler.
-			else if (type) {
-				payload = await acquaintance[type](restProps);
+			//If a type property arrived, pass it to the appropriate handler.
+			if (type === "acquaintance") {
+				const basePayload = await acquaintance[name](restProps);
+				// The 'type' property might return from  an acquaintance method as 'command'.
+				payload = basePayload.type ? basePayload : { ...basePayload, type };
 			}
 		}
-		// writes to the socket connection in case there is a payload.
+		// Writes to the socket connection in case there is a payload.
 		if (payload) socket.write(utils.JSONToString(payload));
 	} catch (error) {
 		console.error(error);

@@ -91,9 +91,8 @@ export const askIfPasswordAgain = () => {
 export const askForNextCommand = async () => {
 	try {
 		const { command } = await askNext();
-		const [name, data] = command.split(" ");
-		const commandData = { name, data };
-		const payload = { type: "command", commandData };
+		const [name, ...data] = command.split(" ");
+		const payload = { type: "command", name, pdata: data };
 		return payload;
 	} catch (error) {
 		console.error(error);

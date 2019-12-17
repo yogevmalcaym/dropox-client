@@ -4,8 +4,8 @@ import * as consts from "../shared/consts.js";
 
 const getPasswordFromClient = async () => {
 	try {
-		const { clientPassword } = await inquirer.askForPassword();
-		const payload = { type: "validatePasswordByFolder", clientPassword };
+		const data = await inquirer.askForPassword();
+		const payload = { name: "validatePasswordByFolder", pdata: data };
 		return payload;
 	} catch (error) {
 		console.error(error);
@@ -13,13 +13,14 @@ const getPasswordFromClient = async () => {
 };
 
 // Ask for the main folder name from client.
-// @param question {string}
-const getMainFolderName = async question => {
+// @param question {string}.
+export const getMainFolderName = async question => {
 	try {
-		const { mainFolderName } = await inquirer.askMainFolder(question);
+		const data = await inquirer.askMainFolder(question);
+		console.log(data);
 		const payload = {
-			type: "mainClientFolder",
-			folderName: mainFolderName
+			name: "mainClientFolder",
+			pdata: data
 		};
 		return payload;
 	} catch (error) {
@@ -49,7 +50,7 @@ export const mainFolderExistance = async ({ isExists }) => {
 				if (payload) return payload;
 			} else {
 				console.log(chalk.red(consts.SELECT_ANOTHER_FOLDER));
-				const payload = getMainFolderName(consts.WELCOME_MESSAGE);
+				const payload = getMainFolderName(consts.SELECT_ANOTHER_FOLDER);
 				if (payload) return payload;
 			}
 		}
@@ -62,10 +63,10 @@ export const mainFolderExistance = async ({ isExists }) => {
 export const clientFolderCreated = async () => {
 	try {
 		console.log(chalk.green(consts.FOLDER_CREATED));
-		const { clientPassword } = await inquirer.askForPassword();
+		const data = await inquirer.askForPassword();
 		const payload = {
-			type: "newClientPassword",
-			clientPassword
+			name: "newClientPassword",
+			pdata: data
 		};
 		return payload;
 	} catch (error) {
