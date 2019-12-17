@@ -1,21 +1,19 @@
 #!/usr/bin/env node
 
-const path = require("path");
-// config .env file variables to be accessible through 'procces.env'.
-require("dotenv").config();
+import net from "net";
+import config from "./config.json";
 
-const net = require("net");
 // Connect to server.
 const socket = net.connect({
-	port: process.env.REMOTE_PORT,
-	host: process.env.REMOTE_HOST
+	port: config.REMOTE_PORT,
+	host: config.REMOTE_HOST
 });
 
-const chalk = require("chalk");
-const inquirer = require("./services/inquirer");
-const utils = require("./shared/utils");
-const messageHandlers = require("./services/messageHandlers");
-const commands = require("./services/commands");
+import chalk from "chalk";
+import * as inquirer from "./services/inquirer.js";
+import * as utils from "./shared/utils.js";
+import * as acquaintance from "./services/acquaintance.js";
+import * as commands from "./services/commands.js";
 
 //Initialize process when the connection is ready to use.
 const init = async () => {
@@ -58,7 +56,7 @@ const dataReceivedHandle = async data => {
 			}
 			//If a type property arrived, pass it to the appropriate message handler.
 			else if (type) {
-				payload = await messageHandlers[type](restProps);
+				payload = await acquaintance[type](restProps);
 			}
 		}
 		// writes to the socket connection in case there is a payload.
@@ -69,7 +67,7 @@ const dataReceivedHandle = async data => {
 };
 const connectionClosedHandle = () => console.log("Connection Closed");
 const connectionErrorHandle = error =>
-console.log("Error: " + error.toString());
+	console.log("Error: " + error.toString());
 
 // socket connection event listeners.
 socket.on("error", connectionErrorHandle);

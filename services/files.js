@@ -1,7 +1,7 @@
-const fs = require("fs");
+import fs from "fs";
+
+// Exports.
 // Handles any interation with the fs module.
-module.exports = {
-    isExists: path => fs.existsSync(path),
-    createFolder: path => fs.mkdirSync(path),
-    getWriteStream: path => fs.createWriteStream(path)
-}
+export const isExists = path => fs.existsSync(path);
+export const createFolder = path => fs.mkdirSync(path);
+export const getWriteStream = path => fs.createWriteStream(path);
