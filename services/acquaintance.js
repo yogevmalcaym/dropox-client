@@ -8,7 +8,7 @@ const getPasswordFromClient = async () => {
 		const payload = { name: "validatePasswordByFolder", pdata: data };
 		return payload;
 	} catch (error) {
-		console.error(error);
+		console.log(error.message);
 	}
 };
 
@@ -24,7 +24,7 @@ export const getMainFolderName = async question => {
 		};
 		return payload;
 	} catch (error) {
-		console.error(error);
+		console.log(error.message);
 	}
 };
 
@@ -55,7 +55,7 @@ export const mainFolderExistance = async ({ isExists }) => {
 			}
 		}
 	} catch (error) {
-		console.error(error);
+		console.log(error.message);
 	}
 };
 
@@ -70,7 +70,7 @@ export const clientFolderCreated = async () => {
 		};
 		return payload;
 	} catch (error) {
-		console.error(error);
+		console.log(error.message);
 	}
 };
 
@@ -92,6 +92,6 @@ export const validationRespond = async ({ isValid }) => {
 			else return getMainFolderName(consts.SELECT_ANOTHER_FOLDER);
 		}
 	} catch (error) {
-		console.error(error);
+		console.log(error.message);
 	}
 };

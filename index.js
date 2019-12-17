@@ -26,7 +26,7 @@ const init = async () => {
 
 		socket.write(utils.JSONToString(payload));
 	} catch (error) {
-		console.error(error);
+		console.log(error.message);
 	}
 };
 
@@ -64,12 +64,12 @@ const dataReceivedHandle = async data => {
 		// Writes to the socket connection in case there is a payload.
 		if (payload) socket.write(utils.JSONToString(payload));
 	} catch (error) {
-		console.error(error);
+		console.log(error.message);
 	}
 };
 const connectionClosedHandle = () => console.log("Connection Closed");
 const connectionErrorHandle = error =>
-	console.log("Error: " + error.toString());
+	console.log(error.message);
 
 // socket connection event listeners.
 socket.on("error", connectionErrorHandle);

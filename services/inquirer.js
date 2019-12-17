@@ -95,6 +95,6 @@ export const askForNextCommand = async () => {
 		const payload = { type: "command", name, pdata: data };
 		return payload;
 	} catch (error) {
-		console.error(error);
+		console.log(error.message);
 	}
 };

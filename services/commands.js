@@ -82,7 +82,7 @@ export const download = ({ data: fileName, socket }) => {
 		});
 		// In case of error at the writestream, ask for command form client to continue at the process.
 		wstream.on("error", error => {
-			console.error(error);
+			console.log(error.message);
 			reject(inquirer.askForNextCommand());
 		});
 		wstream.on("end", () => {
