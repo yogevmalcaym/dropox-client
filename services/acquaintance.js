@@ -30,7 +30,7 @@ export const getMainFolderName = async question => {
 
 // Log to the client that he connected sucessfully.
 const startWorkingLog = successMessage => {
-	console.log(chalk.green(successMessage));
+	console.log(successMessage);
 	console.log(consts.HELP);
 };
 
@@ -49,7 +49,7 @@ export const mainFolderExistance = async ({ isExists }) => {
 				const payload = getPasswordFromClient();
 				if (payload) return payload;
 			} else {
-				console.log(chalk.red(consts.SELECT_ANOTHER_FOLDER));
+				console.log(consts.SELECT_ANOTHER_FOLDER);
 				const payload = getMainFolderName(consts.SELECT_ANOTHER_FOLDER);
 				if (payload) return payload;
 			}
@@ -62,7 +62,7 @@ export const mainFolderExistance = async ({ isExists }) => {
 //New folder created for the client at the server.
 export const clientFolderCreated = async () => {
 	try {
-		console.log(chalk.green(consts.FOLDER_CREATED));
+		console.log(consts.FOLDER_CREATED);
 		const data = await inquirer.askForPassword();
 		const payload = {
 			name: "newClientPassword",
@@ -81,6 +81,7 @@ export const passwordReserved = () => {
 };
 
 //Response after validation check.
+// @param isValid {boolean}.
 export const validationRespond = async ({ isValid }) => {
 	try {
 		if (isValid) {

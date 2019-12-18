@@ -2,20 +2,20 @@
 
 import net from "net";
 import config from "./config.json";
-
-// Connect to server.
-const socket = net.connect({
-	port: config.REMOTE_PORT,
-	host: config.REMOTE_HOST
-});
-socket.setEncoding("utf8");
-
 import chalk from "chalk";
 import * as inquirer from "./services/inquirer.js";
 import * as utils from "./shared/utils.js";
 import * as acquaintance from "./services/acquaintance.js";
 import * as commands from "./services/commands.js";
 import * as consts from "./shared/consts.js";
+
+// Connect to server.
+const socket = net.connect({
+	port: config.REMOTE_PORT,
+	host: config.REMOTE_HOST
+});
+
+socket.setEncoding("utf8");
 
 //Initialize process when the connection is ready to use.
 const init = async () => {
@@ -31,9 +31,10 @@ const init = async () => {
 	}
 };
 
+// TODO check this comment
 // Routing the data to the appropriate function handler by the `type` property.
 // Sends back to the server a payload if has.
-// @param data {string}. -> Defaults to "{}" since while streaming undefined data might be received.
+// @param data {string}. -> Defaults to "{}" since while streaming undefined data might arrive.
 const dataReceivedHandle = async (data = "{}") => {
 	console.log("data received: " + data + " end data");
 	if (socket.fileStreaming) return;
@@ -53,7 +54,7 @@ const dataReceivedHandle = async (data = "{}") => {
 				if (name === "download") restProps.socket = socket;
 				payload = await commands[name](restProps);
 			}
-			//If a type property arrived, pass it to the appropriate handler.
+			// payloads which typed 'acquaintance' should activate thier appropriate function in 'acquaintance' module.
 			if (type === "acquaintance") {
 				const basePayload = await acquaintance[name](restProps);
 				// The 'type' property might return from  an acquaintance method as 'command'.
@@ -66,8 +67,13 @@ const dataReceivedHandle = async (data = "{}") => {
 		console.log("error: " + error.message);
 	}
 };
-const connectionClosedHandle = () => console.log("Connection Closed");
-const connectionErrorHandle = error => console.log("error: " + error.message);
+
+// socket's 'close' event handler.
+const connectionClosedHandle = () => console.log(consts.DISCONNECTED);
+
+// socket's 'error' event handler.
+const connectionErrorHandle = error =>
+	console.log(chalk`{red ${error.message}}`);
 
 // socket connection event listeners.
 socket.on("error", connectionErrorHandle);

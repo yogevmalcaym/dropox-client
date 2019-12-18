@@ -10,7 +10,9 @@ import * as utils from "../shared/utils.js";
 // The methods returns promises for next command.
 
 // Handles server's response of `dir` command.
-// @param data {object: folderData {array}, folderPath {string}, extra {boolean}}.
+// @param folderData {array}.
+// @param folderPath {string}.
+// @param extra {boolean}-> optionally.
 export const dir = ({ data: { folderData, folderPath, extra } }) => {
 	let commandMessage;
 	const tab = `\t`;

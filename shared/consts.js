@@ -2,12 +2,10 @@ import chalk from "chalk";
 
 export const WELCOME_MESSAGE =
 	"Welcome to Dropox! What folder would you like to work on?";
-export const SELECT_ANOTHER_FOLDER = "Please select another folder name";
-export const VALIDATE_SUCCESFULLY =
-	"Validate succesfully, you can start working";
-export const PASSWORD_RESERVED = "Password reserved! you can start working";
-export const FOLDER_CREATED =
-	"New folder created for you, please choose a password";
+export const SELECT_ANOTHER_FOLDER = chalk`{red Please select another folder name}`;
+export const VALIDATE_SUCCESFULLY = chalk`Validate succesfully, you can start working`;
+export const PASSWORD_RESERVED = chalk`{green Password reserved!}\nyou can start working`;
+export const FOLDER_CREATED = chalk`{green New folder created for you} please choose a password`;
 export const HELP = "For help enter `help`";
 export const FOLDER_NAME_NOT_VALID =
 	"Please type a valid command, for more information type `help`";
@@ -18,4 +16,5 @@ export const WRONG_PASSWORD = chalk`{bold.red Wrong password.}\nwould you like t
 export const FOLDER_IS_EMPTY = "This folder is empty";
 export const OK = chalk`{bold.green OK}`;
 export const SAVED_SUCCESSFULLY = chalk`{green Download done successfully!}`;
-export const DOWNLOAD_ERROR = chalk`{red An error occured while downloading. there migh be missing data.}`
+export const DOWNLOAD_ERROR = chalk`{red An error occured while downloading. there migh be missing data.}`;
+export const DISCONNECTED = chalk`{red You are disconnected}`;

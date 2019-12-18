@@ -1,6 +1,8 @@
 import inquirer from "inquirer";
 import * as consts from "../shared/consts.js";
 
+
+// @param value {string}.
 // @param failMessage {string}.
 const notEmptyValidation = ({ value, failMessage }) => {
 	if (value.length) return true;
@@ -30,6 +32,7 @@ const askNext = () => {
 // The methods returns promises.
 
 // Ask the client for main folder name.
+// @param questionsMessage {string}.
 export const askMainFolder = questionsMessage => {
 	const questions = [
 		{
