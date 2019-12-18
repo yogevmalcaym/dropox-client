@@ -17,7 +17,6 @@ const getPasswordFromClient = async () => {
 export const getMainFolderName = async question => {
 	try {
 		const data = await inquirer.askMainFolder(question);
-		console.log(data);
 		const payload = {
 			name: "mainClientFolder",
 			pdata: data
