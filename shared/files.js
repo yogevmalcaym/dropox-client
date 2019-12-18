@@ -3,5 +3,9 @@ import fs from "fs";
 // Exports.
 // Handles any interation with the fs module.
 export const isExists = path => fs.existsSync(path);
-export const createFolder = path => fs.mkdirSync(path);
+// Creates new folder. 
+// @param path {string}.
+// @param {recursive} boolean -> optionally.
+export const createFolder = (path, recursive) =>
+	fs.mkdirSync(path, { recursive: recursive });
 export const getWriteStream = path => fs.createWriteStream(path);

@@ -15,8 +15,6 @@ const socket = net.connect({
 	host: config.REMOTE_HOST
 });
 
-socket.setEncoding("utf8");
-
 //Initialize process when the connection is ready to use.
 const init = async () => {
 	try {
@@ -25,33 +23,27 @@ const init = async () => {
 		);
 		const payload = { ...response, type: "acquaintance" };
 
-		socket.write(utils.JSONToString(payload));
+		socket.write(utils.toString(payload));
 	} catch (error) {
 		console.log(error.message);
 	}
 };
 
-// TODO check this comment
 // Routing the data to the appropriate function handler by the `type` property.
 // Sends back to the server a payload if has.
-// @param data {string}. -> Defaults to "{}" since while streaming undefined data might arrive.
-const dataReceivedHandle = async (data = "{}") => {
-	console.log("data received: " + data + " end data");
-	if (socket.fileStreaming) return;
+// @param data {Buffer}.
+const dataReceivedHandle = async data => {
 	try {
 		let payload;
-		const { type, name, errorMessage, ...restProps } = utils.stringToJSON(data);
-		console.log(restProps);
+		const { type, name, errorMessage, ...restProps } = utils.toJSON(data);
 		// In case of an error received, log it and ask for next command.
 		if (errorMessage) {
 			console.log(chalk`{red ${errorMessage}}`);
 			payload = await inquirer.askForNextCommand();
 		} else {
 			// payloads which typed 'command' should activate thier appropriate function in 'commands' module.
-			if (type === "command" && name) {
+			if (type === "command") {
 				// Routes commands to their appropriate function handlers.
-				// TODO Change it to be not like this
-				if (name === "download") restProps.socket = socket;
 				payload = await commands[name](restProps);
 			}
 			// payloads which typed 'acquaintance' should activate thier appropriate function in 'acquaintance' module.
@@ -62,7 +54,7 @@ const dataReceivedHandle = async (data = "{}") => {
 			}
 		}
 		// Writes to the socket connection in case there is a payload.
-		if (payload) socket.write(utils.JSONToString(payload));
+		if (payload) socket.write(utils.toString(payload));
 	} catch (error) {
 		console.log("error: " + error.message);
 	}

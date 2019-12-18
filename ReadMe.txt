@@ -35,7 +35,7 @@ Detailed commands explenation:
 	download:
 		use download command to download files.
 		download command takes a path to the file which is relates to the current folder in the tree.
-		NOTE: download command does not accept '..' and global paths.
-		The downloaded file will be saved into the project directory in a folder named 'downloads' in case you didn't change it's variable in the config file.
+		NOTE: download command does not accept '..' and global paths. only local paths.
+		The downloaded file will be saved into the project directory in the same folders tree in a folder named by default 'downloads'.
 		usage:
 			$:download <local/path/to/file>

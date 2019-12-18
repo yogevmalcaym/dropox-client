@@ -2,9 +2,10 @@ import chalk from "chalk";
 import config from "../config.json";
 import * as inquirer from "./inquirer.js";
 import * as consts from "../shared/consts.js";
-import * as files from "./files.js";
+import * as files from "../shared/files.js";
 import * as utils from "../shared/utils.js";
 
+import net from 'net';
 // Exports
 // Commands handlers that arrives from the server.
 // The methods returns promises for next command.
@@ -52,55 +53,44 @@ export const cd = () => {
 };
 
 // Handles download operation responses.
-// @param done {boolean}
-// @param socket {net.Socket instance}
-export const download = ({ data: { fileName, done }, socket }) => {
-	// Returns a promise which will be resolved/rejected once the download stream ends.
-	return new Promise((resolve, reject) => {
-		// Make sure that the saving folder is exists and create writestream to the required file.
-		const localSaveFolderPath = utils.joinPath(
-			process.cwd(),
-			config.SAVE_FOLDER_NAME
-		);
-		if (!files.isExists(localSaveFolderPath))
-			files.createFolder(localSaveFolderPath);
-		const localSaveFilePath = utils.joinPath(localSaveFolderPath, fileName);
+// @param localFilePath {string}
+// @param currentFolderPath {string}
+export const download = ({ data: { localFilePath, currentFolderPath } }) => {
+	const localSaveFolderPath = utils.joinPath(
+		process.cwd(),
+		config.SAVE_FOLDER_NAME,
+		currentFolderPath
+	);
+	const [fileName, innerPath] = utils.splitStringEndAndRest(localFilePath, "/");
+	const fullInnerFolderPath = utils.joinPath(localSaveFolderPath, innerPath);
+	// Make sure the the requested folder path exists.
+	files.createFolder(fullInnerFolderPath, true);
 
-		console.log("start saving to " + localSaveFilePath);
-		// Creates write stream to the requested file.
-		const wstream = files.getWriteStream(localSaveFilePath);
-		//mark socket as 'fileStreaming' to prevent from the main 'data' handler try
-		socket.fileStreaming = true;
-		socket.on("data", container => {
-			let data;
-			data = container.split("\n");
-			data.forEach(lineChunk => {
-				const { chunk, done } = utils.stringToJSON(lineChunk);
-				if (done) {
-					socket.fileStreaming = false;
-					wstream.close();
-					resolve(inquirer.askForNextCommand());
-				} else {
-					if (chunk) wstream.write(Buffer.from(chunk));
-				}
-			});
-		});
-
-		wstream.on("finish", () => {
-			console.log(consts.SAVED_SUCCESSFULLY);
-		});
-
-		// In case of error at the writestream, ask for command form client to continue at the process.
-		wstream.on("error", error => {
-			console.log(consts.DOWNLOAD_ERROR);
-			console.log("[wstream] error - " + error.message);
-			socket.streaming = false;
-			reject(inquirer.askForNextCommand());
-		});
-		wstream.on("end", () => {
-			console.log("[wstream] - end");
-		});
+	const localSaveFilePath = utils.joinPath(fullInnerFolderPath, fileName);
+	console.log(consts.startDownloadLog(localSaveFilePath));
+	const wstream = files.getWriteStream(localSaveFilePath);
+	const fileStream = net.connect({
+		port: 8081,
+		host: config.REMOTE_HOST
 	});
+	// This payload let the Downloader details to start download.
+	const startPayload = { localFilePath, currentFolderPath };
+	fileStream.write(utils.toString(startPayload));
+
+	fileStream.pipe(wstream);
+	
+	fileStream.on('close',(hadError)=>{
+if (!hadError) console.log(consts.DOWNLOAD_SUCCESS)
+	})
+	wstream.on("error", error => {
+		console.log(consts.downloadErrorLog(error.message));
+	});
+
+	fileStream.on("error", error => {
+		console.log(consts.downloadErrorLog(error.message));
+	});
+
+	return inquirer.askForNextCommand();
 };
 
 // Handles the response for help command.

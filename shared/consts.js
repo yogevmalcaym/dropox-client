@@ -16,5 +16,11 @@ export const WRONG_PASSWORD = chalk`{bold.red Wrong password.}\nwould you like t
 export const FOLDER_IS_EMPTY = "This folder is empty";
 export const OK = chalk`{bold.green OK}`;
 export const SAVED_SUCCESSFULLY = chalk`{green Download done successfully!}`;
-export const DOWNLOAD_ERROR = chalk`{red An error occured while downloading. there migh be missing data.}`;
 export const DISCONNECTED = chalk`{red You are disconnected}`;
+export const DOWNLOAD_SUCCESS = chalk`{green Download complete}`;
+export const startDownloadLog = path =>
+	chalk`{green.bold Start downloading to: ${path}}`;
+export const savedSuccessfullyLog = path =>
+	chalk`green.bold Saved successfully to ${path}`;
+export const downloadErrorLog = message =>
+	chalk`red.bold An error occured while saving the file: ${message}`;
