@@ -17,5 +17,5 @@ export const PASSWORD_NOT_EMPTY = "password cannot be empty";
 export const WRONG_PASSWORD = chalk`{bold.red Wrong password.}\nwould you like to try again?`;
 export const FOLDER_IS_EMPTY = "This folder is empty";
 export const OK = chalk`{bold.green OK}`;
-export const savedSuccesfully = path =>
-	chalk`{green Download done successfully, saved to ${path}}`;
+export const SAVED_SUCCESSFULLY = chalk`{green Download done successfully!}`;
+export const DOWNLOAD_ERROR = chalk`{red An error occured while downloading. there migh be missing data.}`

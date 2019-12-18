@@ -52,7 +52,8 @@ export const cd = () => {
 // Handles download operation responses.
 // @param done {boolean}
 // @param socket {net.Socket instance}
-export const download = ({ data: fileName, socket }) => {
+export const download = ({ data: { fileName, done }, socket }) => {
+	// Returns a promise which will be resolved/rejected once the download stream ends.
 	return new Promise((resolve, reject) => {
 		// Make sure that the saving folder is exists and create writestream to the required file.
 		const localSaveFolderPath = utils.joinPath(
@@ -62,40 +63,40 @@ export const download = ({ data: fileName, socket }) => {
 		if (!files.isExists(localSaveFolderPath))
 			files.createFolder(localSaveFolderPath);
 		const localSaveFilePath = utils.joinPath(localSaveFolderPath, fileName);
-		const wstream = files.getWriteStream(localSaveFilePath);
 
-		socket.streaming = true;
 		console.log("start saving to " + localSaveFilePath);
-		// socket.pipe(wstream);
-		// Handles the file data that arrives.
-		// @param chunk {string}. (TODO should be Buffer)
-		socket.on("data", chunk => {
-			console.log("chunk arraived: " + chunk);
-			if (chunk === "done") {
-				wstream.close();
-				console.log(consts.savedSuccesfully(localSaveFolderPath));
-				socket.streaming = false;
-				resolve(inquirer.askForNextCommand());
-			} else {
-				wstream.write(chunk);
-			}
-		});
-		// In case of error at the writestream, ask for command form client to continue at the process.
-		wstream.on("error", error => {
-			console.log(error.message);
-			reject(inquirer.askForNextCommand());
-		});
-		wstream.on("end", () => {
-			console.log("stream end");
+		// Creates write stream to the requested file.
+		const wstream = files.getWriteStream(localSaveFilePath);
+		//mark socket as 'fileStreaming' to prevent from the main 'data' handler try
+		socket.fileStreaming = true;
+		socket.on("data", container => {
+			let data;
+			data = container.split("\n");
+			data.forEach(lineChunk => {
+				const { chunk, done } = utils.stringToJSON(lineChunk);
+				if (done) {
+					socket.fileStreaming = false;
+					wstream.close();
+					resolve(inquirer.askForNextCommand());
+				} else {
+					if (chunk) wstream.write(Buffer.from(chunk));
+				}
+			});
 		});
 
 		wstream.on("finish", () => {
-			socket.streaming = false;
-			socket.unpipe(wstream);
-			console.log("write stream finished");
+			console.log(consts.SAVED_SUCCESSFULLY);
 		});
-		wstream.on("close", () => {
-			console.log("Write steam cloased");
+
+		// In case of error at the writestream, ask for command form client to continue at the process.
+		wstream.on("error", error => {
+			console.log(consts.DOWNLOAD_ERROR);
+			console.log("[wstream] error - " + error.message);
+			socket.streaming = false;
+			reject(inquirer.askForNextCommand());
+		});
+		wstream.on("end", () => {
+			console.log("[wstream] - end");
 		});
 	});
 };
